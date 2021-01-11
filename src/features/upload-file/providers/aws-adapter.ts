@@ -38,7 +38,7 @@ export type AWSOptions = {
 export default class AWSProvider extends BaseAdapter {
   private s3: S3
 
-  public expires: number | null
+  // public expires: number | null
 
   constructor(options: AWSOptions) {
     super(options.bucket)
@@ -52,9 +52,9 @@ export default class AWSProvider extends BaseAdapter {
       throw new Error('You have to install `aws-sdk` in order to run this plugin with AWS')
     }
     // this check is needed because option expires can be `0`
-    this.expires = typeof options.expires === 'undefined'
-      ? 86400
-      : options.expires
+    // this.expires = typeof options.expires === 'undefined'
+    //   ? 86400
+    //   : options.expires
     this.s3 = new AWS_S3(options)
   }
 
@@ -64,9 +64,7 @@ export default class AWSProvider extends BaseAdapter {
       Bucket: this.bucket,
       Key: key,
       Body: tmpFile,
-    }
-    if (!this.expires) {
-      params.ACL = 'public-read'
+      ACL : 'public-read'    
     }
     return this.s3.upload(params).promise()
   }
@@ -75,14 +73,7 @@ export default class AWSProvider extends BaseAdapter {
     return this.s3.deleteObject({ Key: key, Bucket: bucket }).promise()
   }
 
-  public async path(key: string, bucket: string): Promise<string> {
-    if (this.expires) {
-      return this.s3.getSignedUrl('getObject', {
-        Key: key,
-        Bucket: bucket,
-        Expires: this.expires,
-      })
-    }
+  public async path(key: string, bucket: string): Promise<string> {    
     // https://bucket.s3.amazonaws.com/key
     return `https://${bucket}.s3.amazonaws.com/${key}`
   }
